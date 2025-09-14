@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 0b311917ef48ad2469677db6ecbfa563
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 235245
+  packageName: Haunted Corridor
+  packageVersion: 1.1
+  assetPath: Assets/AK Studio Art/Haunted Corridor/Settings/HDRP/HDRenderPipelineAsset.asset
+  uploadId: 742762

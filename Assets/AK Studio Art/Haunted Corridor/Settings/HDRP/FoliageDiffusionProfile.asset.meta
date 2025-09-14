@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: e593da58203fb974a8b5cc4c6b4871e9
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 235245
+  packageName: Haunted Corridor
+  packageVersion: 1.1
+  assetPath: Assets/AK Studio Art/Haunted Corridor/Settings/HDRP/FoliageDiffusionProfile.asset
+  uploadId: 742762

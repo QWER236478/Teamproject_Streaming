@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: cdb5de25d5ef040468e0cc284b8d13d6
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 235245
+  packageName: Haunted Corridor
+  packageVersion: 1.1
+  assetPath: Assets/AK Studio Art/Haunted Corridor/Settings/HDRP/DefaultSettingsVolumeProfile.asset
+  uploadId: 742762

@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: 4d9f73f06925a274b971b9c38d76ba00
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 235245
+  packageName: Haunted Corridor
+  packageVersion: 1.1
+  assetPath: Assets/AK Studio Art/Haunted Corridor/Settings/URP/Universal Render
+    Pipeline Asset_Renderer.asset
+  uploadId: 742762
