@@ -8,4 +8,16 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/SampleScene.unity
     guid: 99c9720ab356a0642a771bea13969a05
-  m_configObjects: {}
+  - enabled: 1
+    path: Assets/AK Studio Art/Haunted Corridor/Scenes/Demo.unity
+    guid: 6d0cf8ad4fd532345bc65b6098d66701
+  m_configObjects:
+    Unity.XR.Oculus.Settings: {fileID: 11400000, guid: 1b239529c0465c34fa54f29ae8bb05a6,
+      type: 2}
+    UnityEditor.XR.ARCore.ARCoreSettings: {fileID: 11400000, guid: f21d23f6f2d422f418bdf97d09ac3bb4,
+      type: 2}
+    com.unity.xr.arfoundation.simulation_settings: {fileID: 11400000, guid: 75e80568efc79284f9ab23f02b06791c,
+      type: 2}
+    com.unity.xr.management.loader_settings: {fileID: 11400000, guid: 8b902afadf71d4b4b900dd7a1529bd88,
+      type: 2}
+  m_UseUCBPForAssetBundles: 0
