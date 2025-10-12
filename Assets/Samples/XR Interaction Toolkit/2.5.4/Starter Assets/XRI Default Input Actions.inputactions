@@ -2800,6 +2800,34 @@
                     "isPartOfComposite": false
                 }
             ]
+        },
+        {
+            "name": "GripToggle ",
+            "id": "f156ecbb-1c82-4f13-a54d-50acc1719ca2",
+            "actions": [
+                {
+                    "name": "GripToggle ",
+                    "type": "Button",
+                    "id": "1d928322-2752-4e58-a0ea-a7af63ac6ab8",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "10eafcc4-6568-48d1-a410-3e251639f66e",
+                    "path": "<XRSimulatedController>{RightHand}/gripButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "GripToggle ",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
         }
     ],
     "controlSchemes": [

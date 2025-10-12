@@ -9,28 +9,43 @@ public class UIManager : MonoBehaviour
     // 타이머
     public TextMeshProUGUI timerText;
     // REC 깜빡임
-    public Image recIndicator; // 새로 추가: REC 표시 이미지 오브젝트
+    public Image recIndicator; // REC 표시 이미지 오브젝트
     public float blinkInterval = 0.5f; // 깜빡이는 간격 (0.5초마다)
 
     // 배터리
     public Slider batterySlider;
     public TextMeshProUGUI batteryPercentText;
     public float initialBatteryLevel = 100f;
-    public float drainRatePerSecond = 1f; // 초당 소모될 배터리 양 (예: 1초에 1%)
+
+    // === 카메라/플래시 관련 변수 ===
+    public GameObject cameraUIRoot; // 카메라 UI 전체 (Canvas)
+    public Light flashLight;       // 씬에 추가할 플래시 라이트 오브젝트
+
+    public float normalDrainRate = 1f; // 평상시 초당 배터리 소모율
+    public float flashDrainIncrease = 5f; // 플래시 켤 때 추가되는 소모율
 
     // 게임 오버
-    public GameObject gameOverPanel; // 인스펙터에서 비활성화된 게임 오버 패널을 연결
+    public GameObject gameOverPanel; // 인스펙터에서 비활성화된 게임 오버 패널
 
     // === 내부 상태 변수 ===
     private float timeElapsed = 0f;
     private float currentBatteryLevel;
     private bool isGameOver = false;
+    private bool isCameraOn = true;
+    private bool isFlashOn = false; // 플래시는 꺼진 상태로 시작
+
 
     void Start()
     {
         currentBatteryLevel = initialBatteryLevel;
-        gameOverPanel.SetActive(false); // 시작 시 게임 오버 패널 숨기기
-        Time.timeScale = 1; // 혹시 모를 상황 대비하여 게임 속도 정상화
+        gameOverPanel.SetActive(false);
+        Time.timeScale = 1;
+
+        // 초기 카메라 UI 상태 설정
+        SetCameraActive(true);
+        // 초기 플래시 상태 설정: 코드 상으로 비활성화합니다.
+        if (flashLight != null) flashLight.enabled = false;
+
         if (recIndicator != null)
         {
             InvokeRepeating("BlinkRec", 0.1f, blinkInterval);
@@ -39,9 +54,11 @@ public class UIManager : MonoBehaviour
 
     void Update()
     {
-        if (isGameOver)
+        // 카메라가 꺼져 있거나 게임 오버 상태면 타이머/배터리 소모 정지
+        if (isGameOver || !isCameraOn)
         {
-            return; // 게임 오버 상태면 아무것도 하지 않음
+            if (!isGameOver)
+                return;
         }
 
         // 1. 타이머 업데이트 로직
@@ -50,11 +67,16 @@ public class UIManager : MonoBehaviour
         // 2. 배터리 소모 로직
         DrainBattery();
     }
+
     void BlinkRec()
     {
         // recIndicator의 활성화 상태를 반전시킵니다.
-        recIndicator.enabled = !recIndicator.enabled;
+        if (recIndicator != null)
+        {
+            recIndicator.enabled = !recIndicator.enabled;
+        }
     }
+
     private void UpdateTimer()
     {
         timeElapsed += Time.deltaTime;
@@ -63,14 +85,20 @@ public class UIManager : MonoBehaviour
         int seconds = (int)(timeElapsed % 60f);
         int milliseconds = (int)((timeElapsed * 1000f) % 1000f);
 
-        // 이미지에 맞게 시간 형식 (분:초:밀리초)으로 설정
         timerText.text = string.Format("{0:00}:{1:00}:{2:00}", minutes, seconds, milliseconds / 10);
     }
 
     private void DrainBattery()
     {
+        // 소모율 계산: 플래시가 켜져 있으면 추가 소모율을 더함
+        float currentDrainRate = normalDrainRate;
+        if (isFlashOn)
+        {
+            currentDrainRate += flashDrainIncrease;
+        }
+
         // 배터리 잔량 감소
-        currentBatteryLevel -= drainRatePerSecond * Time.deltaTime;
+        currentBatteryLevel -= currentDrainRate * Time.deltaTime;
 
         // UI 업데이트
         batterySlider.value = currentBatteryLevel;
@@ -79,7 +107,7 @@ public class UIManager : MonoBehaviour
         // 3. 게임 오버 조건 체크
         if (currentBatteryLevel <= 0)
         {
-            currentBatteryLevel = 0; // 0 이하로 내려가지 않도록 고정
+            currentBatteryLevel = 0;
             isGameOver = true;
             ShowGameOver();
         }
@@ -91,12 +119,97 @@ public class UIManager : MonoBehaviour
         gameOverPanel.SetActive(true);
         Time.timeScale = 0;
 
-        // 새로 추가: 깜빡이는 기능 정지
+        // 깜빡이는 기능 정지
         CancelInvoke("BlinkRec");
         if (recIndicator != null)
         {
-            recIndicator.enabled = false; // REC 표시등을 완전히 끕니다.
+            recIndicator.enabled = false;
         }
+    }
+
+    // --- 새로운 카메라/플래시 제어 함수 ---
+
+    // 그립 버튼 연결용: 카메라 On/Off 토글 (Q 키)
+    public void ToggleCamera()
+    {
+        if (isGameOver) return;
+
+        Debug.Log("ToggleCamera 호출됨. 토글 전 isCameraOn 상태: " + isCameraOn);
+
+        isCameraOn = !isCameraOn;
+        SetCameraActive(isCameraOn);
+
+        if (recIndicator != null)
+        {
+            if (isCameraOn)
+            {
+                // 카메라 켤 때 REC 깜빡임 재시작
+                InvokeRepeating("BlinkRec", 0.1f, blinkInterval);
+            }
+            else
+            {
+                // 카메라 끌 때 REC 깜빡임 정지
+                CancelInvoke("BlinkRec");
+                recIndicator.enabled = false;
+            }
+        }
+    }
+
+    private void SetCameraActive(bool active)
+    {
+        // 카메라 화면 전체 UI (Canvas)를 켜고 끕니다.
+        if (cameraUIRoot != null)
+        {
+            cameraUIRoot.SetActive(active);
+        }
+
+        // 카메라가 꺼지면 플래시도 강제로 끕니다.
+        if (!active)
+        {
+            TurnFlashOff();
+        }
+    }
+
+    // 트리거 버튼 연결용: 플래시 On/Off 토글 (W 키)
+    public void ToggleFlash()
+    {
+        // A. 플래시 토글 전에 isCameraOn 상태를 콘솔에 출력
+        Debug.Log("ToggleFlash 호출. isCameraOn: " + isCameraOn + ", isFlashOn: " + isFlashOn);
+
+        // B. 카메라가 꺼져 있거나 게임 오버 상태면 작동 중지
+        if (isGameOver || !isCameraOn)
+        {
+            Debug.LogWarning("ToggleFlash 중지됨: 카메라 꺼짐 또는 게임 오버 상태.");
+            return;
+        }
+
+        // C. 연결이 되어 있지 않으면 즉시 경고 출력 (Null 체크 강화)
+        if (flashLight == null)
+        {
+            Debug.LogError("오류: Flash Light 오브젝트가 UIManager 스크립트의 Flash Light 슬롯에 연결되어 있지 않거나 연결이 해제되었습니다!");
+            return;
+        }
+
+        isFlashOn = !isFlashOn;
+
+        if (isFlashOn)
+        {
+            // 플래시 켜는 명령
+            flashLight.enabled = true;
+            Debug.Log("플래시 켜짐 최종 확인: Light.enabled = TRUE 설정됨.");
+        }
+        else
+        {
+            // 플래시 끄는 명령
+            flashLight.enabled = false;
+            Debug.Log("플래시 꺼짐 최종 확인: Light.enabled = FALSE 설정됨.");
+        }
+    }
+
+    private void TurnFlashOff()
+    {
+        isFlashOn = false;
+        if (flashLight != null) flashLight.enabled = false;
     }
 
     // --- 버튼 이벤트 함수 ---
@@ -104,8 +217,7 @@ public class UIManager : MonoBehaviour
     // 게임 오버 패널의 '다시 시작' 버튼에 연결할 함수
     public void RestartLevel()
     {
-        // 현재 씬을 다시 로드하여 게임 재시작
-        Time.timeScale = 1; // 멈춘 게임 시간을 다시 흐르게 한 후
+        Time.timeScale = 1;
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 }
