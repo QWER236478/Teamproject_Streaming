@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: b833ccd546dd9e44582b1791f5b3c8cf
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 259425
+  packageName: Basement of Horror
+  packageVersion: 1.0
+  assetPath: Assets/AK Studio Art/Basement of Horror/Settings/HDRP/HDRenderPipelineGlobalSettings.asset
+  uploadId: 626004
