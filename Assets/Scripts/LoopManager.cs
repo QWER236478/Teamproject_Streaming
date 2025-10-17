@@ -1,70 +1,60 @@
-using UnityEngine;
-using UnityEngine.SceneManagement;
 using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
 
 public class LoopManager : MonoBehaviour
 {
-    public string[] chunkSceneNames = { "sample_chunk1", "sample_chunk2" };
-    public Transform player;
-    public float segmentLength = 15f;
-    public float cornerRotation = 90f;
+    [Header("복도 프리팹")]
+    public GameObject[] corridors;
 
-    private int currentIndex = 0;
-    private Scene currentScene;
-    private Scene nextScene;
-    private Transform currentAnchor;
-    private Transform nextAnchor;
-    private bool isTransitioning = false;
+    [Header("시작 복도 (A)")]
+    public GameObject startCorridor;
 
-    IEnumerator Start()
+    [Header("유지할 복도 수")]
+    public int maxKeepCount = 2;
+
+    private List<GameObject> activeCorridors = new List<GameObject>();
+    private int nextIndex = 1; // A 다음은 B부터 시작
+
+    //중복 생성 방지용 쿨다운
+    private bool isSpawning = false;
+    private float spawnCooldown = 0.4f; // 0.4초간 추가 생성 금지
+
+    void Start()
     {
-        yield return LoadChunk(0, Vector3.zero, Quaternion.identity);
-        currentScene = SceneManager.GetSceneByName(chunkSceneNames[0]);
-        currentAnchor = GetAnchor(currentScene);
+        if (startCorridor != null)
+            activeCorridors.Add(startCorridor);
     }
 
-    private Transform GetAnchor(Scene scene)
+    public void SpawnNext()
     {
-        foreach (var root in scene.GetRootGameObjects())
+        if (isSpawning) return; // 쿨다운 중이면 무시
+        StartCoroutine(SpawnNextRoutine());
+    }
+
+    private IEnumerator SpawnNextRoutine()
+    {
+        isSpawning = true;
+
+        // 1. 다음 복도 프리팹 결정
+        GameObject prefab = corridors[nextIndex];
+
+        // 2. 프리팹 원래 Transform 값 그대로 생성
+        GameObject newCorridor = Instantiate(prefab);
+        activeCorridors.Add(newCorridor);
+
+        // 3. 오래된 복도 삭제
+        if (activeCorridors.Count > maxKeepCount)
         {
-            if (root.name == "Anchor")
-                return root.transform;
+            Destroy(activeCorridors[0]);
+            activeCorridors.RemoveAt(0);
         }
-        return null;
-    }
 
-    public void OnExitTrigger()
-    {
-        if (!isTransitioning)
-            StartCoroutine(TransitionToNextChunk());
-    }
+        // 4. 인덱스 순환
+        nextIndex = (nextIndex + 1) % corridors.Length;
 
-    IEnumerator TransitionToNextChunk()
-    {
-        isTransitioning = true;
-
-        int nextIndex = (currentIndex + 1) % chunkSceneNames.Length;
-
-        Vector3 nextPos = currentAnchor.position + currentAnchor.forward * segmentLength;
-        Quaternion nextRot = currentAnchor.rotation * Quaternion.Euler(0, cornerRotation, 0);
-
-        yield return LoadChunk(nextIndex, nextPos, nextRot);
-
-        yield return SceneManager.UnloadSceneAsync(currentScene);
-
-        currentIndex = nextIndex;
-        currentScene = nextScene;
-        currentAnchor = nextAnchor;
-        isTransitioning = false;
-    }
-
-    IEnumerator LoadChunk(int index, Vector3 pos, Quaternion rot)
-    {
-        var op = SceneManager.LoadSceneAsync(chunkSceneNames[index], LoadSceneMode.Additive);
-        yield return op;
-
-        nextScene = SceneManager.GetSceneByName(chunkSceneNames[index]);
-        nextAnchor = GetAnchor(nextScene);
-        nextAnchor.SetPositionAndRotation(pos, rot);
+        // 5. 잠깐 대기 후 다시 스폰 허용
+        yield return new WaitForSeconds(spawnCooldown);
+        isSpawning = false;
     }
 }
