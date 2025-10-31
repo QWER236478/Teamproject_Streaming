@@ -6,17 +6,8 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/SampleScene.unity
-    guid: 99c9720ab356a0642a771bea13969a05
-  - enabled: 1
-    path: Assets/AK Studio Art/Haunted Corridor/Scenes/Demo.unity
-    guid: 6d0cf8ad4fd532345bc65b6098d66701
-  - enabled: 1
     path: Assets/Scenes/StartMenu.unity
     guid: f48d00a1f7bb3ec4b893ecfb0dc6f03a
-  - enabled: 1
-    path: Assets/Scenes/Ingame_sample.unity
-    guid: 99bc4fcd6ef2e4d468fd7b99fe0bacf9
   - enabled: 1
     path: Assets/Scenes/Chapter2.unity
     guid: 7de3d790c5ad69e4fa503970c66de130
