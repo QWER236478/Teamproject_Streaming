@@ -18,7 +18,7 @@ public class UIManager : MonoBehaviour
     public TextMeshProUGUI batteryPercentText;
     public float initialBatteryLevel = 100f; // 0 ~ 100 사이의 값
 
-    // === 배터리 색상 설정 변수 (기존) ===
+    // === 배터리 색상 설정 변수 ===
     [System.Serializable]
     public class BatteryColorThreshold
     {
@@ -36,11 +36,25 @@ public class UIManager : MonoBehaviour
     public float normalDrainRate = 1f; // 평상시 초당 배터리 소모율
     public float flashDrainIncrease = 5f; // 플래시 켤 때 추가되는 소모율
 
-    // === Canvas Group 변수 (수정 및 추가) ===
+    // === Canvas Group 변수 ===
     // 게임 오버
     public CanvasGroup gameOverCanvasGroup; // 게임 오버 패널의 Canvas Group
     public CanvasGroup inGameHudCanvasGroup; // 인게임 HUD (타이머, 배터리 등)의 CanvasGroup
     public float fadeOutTimeFactor = 1.0f; // 페이드 아웃/인 시간 조절 (클수록 느려짐)
+
+    // === 줌 설정 (새로 추가) ===
+    [Tooltip("카메라 컴포넌트를 연결해주세요. (XR Origin > Camera Offset > Main Camera)")]
+    public Camera mainCamera;
+    [Header("줌 설정")]
+    [Tooltip("최대 줌 인 시 FOV 값 (좁은 시야)")]
+    public float camMinFov = 30f;
+    [Tooltip("기본/최대 줌 아웃 시 FOV 값 (넓은 시야)")]
+    public float camMaxFov = 90f;
+    [Tooltip("줌 전환에 걸리는 시간 (초)")]
+    public float zoomDuration = 0.5f;
+    [Tooltip("줌 전환 속도 곡선 (Lerp 시 사용)")]
+    public AnimationCurve zoomCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
+
 
     // === 내부 상태 변수 ===
     private float timeElapsed = 0f;
@@ -48,6 +62,10 @@ public class UIManager : MonoBehaviour
     private bool isGameOver = false;
     private bool isCameraOn = true;
     private bool isFlashOn = false; // 플래시는 꺼진 상태로 시작
+
+    // === 줌 상태 변수 추가 ===
+    private bool isZoomed = false; // 현재 줌 인 상태인지
+    private float zoomTime = 0f;    // 줌 전환 경과 시간
 
 
     void Start()
@@ -75,6 +93,18 @@ public class UIManager : MonoBehaviour
         // 초기 플래시 상태 설정
         if (flashLight != null) flashLight.enabled = false;
 
+        // 줌 기능 초기화: Main Camera 연결 및 FOV 기본값 설정
+        if (mainCamera == null)
+        {
+            mainCamera = FindObjectOfType<Camera>();
+        }
+        if (mainCamera != null)
+        {
+            // 시작 시 최대 줌 아웃(기본) 상태로 설정
+            mainCamera.fieldOfView = camMaxFov;
+        }
+
+
         // 배터리 UI 초기 업데이트 (색상 및 Fill)
         UpdateBatteryUI();
 
@@ -98,7 +128,8 @@ public class UIManager : MonoBehaviour
                 FadeOutHud();
                 FadeInGameOverPanel();
             }
-            return;
+            if (!isGameOver)
+                return;
         }
 
         // 1. 타이머 업데이트 로직
@@ -106,7 +137,45 @@ public class UIManager : MonoBehaviour
 
         // 2. 배터리 소모 로직
         DrainBattery();
+
+        // 3. 줌 전환 로직 (Lerp 구동)
+        HandleZoomTransition();
     }
+
+    // === 줌 전환 로직 (Update에서 Lerp를 구동) ===
+    private void HandleZoomTransition()
+    {
+        if (mainCamera == null) return;
+
+        // 줌 전환 경과 시간이 설정된 지속 시간보다 작을 때만 Lerp 진행
+        if (zoomTime < zoomDuration)
+        {
+            zoomTime += Time.deltaTime;
+            float normalizedTime = Mathf.Clamp01(zoomTime / zoomDuration);
+
+            // AnimationCurve를 적용한 시간 값
+            float curveValue = zoomCurve.Evaluate(normalizedTime);
+
+            float startFOV, endFOV;
+
+            if (isZoomed)
+            {
+                // 줌 인 전환 중: Max -> Min
+                startFOV = camMaxFov;
+                endFOV = camMinFov;
+            }
+            else
+            {
+                // 줌 아웃 전환 중: Min -> Max
+                startFOV = camMinFov;
+                endFOV = camMaxFov;
+            }
+
+            // Lerp를 사용하여 FOV를 부드럽게 전환
+            mainCamera.fieldOfView = Mathf.Lerp(startFOV, endFOV, curveValue);
+        }
+    }
+
 
     // Canvas Group의 상호작용 및 레이캐스트 설정을 일괄 처리
     private void SetCanvasGroupState(CanvasGroup cg, bool active)
@@ -156,7 +225,6 @@ public class UIManager : MonoBehaviour
 
     void BlinkRec()
     {
-        // recIndicator의 활성화 상태를 반전시킵니다.
         if (recIndicator != null)
         {
             recIndicator.enabled = !recIndicator.enabled;
@@ -176,23 +244,18 @@ public class UIManager : MonoBehaviour
 
     private void DrainBattery()
     {
-        // 소모율 계산: 플래시가 켜져 있으면 추가 소모율을 더함
         float currentDrainRate = normalDrainRate;
         if (isFlashOn)
         {
             currentDrainRate += flashDrainIncrease;
         }
 
-        // 배터리 잔량 감소
         currentBatteryLevel -= currentDrainRate * Time.deltaTime;
 
-        // 배터리 잔량이 0 이하로 내려가지 않도록 함
         currentBatteryLevel = Mathf.Max(0f, currentBatteryLevel);
 
-        // UI 업데이트 함수 호출
         UpdateBatteryUI();
 
-        // 3. 게임 오버 조건 체크
         if (currentBatteryLevel <= 0 && !isGameOver)
         {
             isGameOver = true;
@@ -202,25 +265,18 @@ public class UIManager : MonoBehaviour
 
     private void UpdateBatteryUI()
     {
-        // Image Fill 방식 업데이트
-        // currentBatteryLevel (0~100)을 fillAmount (0~1)로 변환
         if (batterySlider != null)
         {
             batterySlider.fillAmount = currentBatteryLevel / 100f;
-
-            // 잔량 퍼센트 텍스트 업데이트
             batteryPercentText.text = Mathf.RoundToInt(currentBatteryLevel) + "%";
-
-            // 배터리 색상 업데이트
             UpdateBatteryColor();
         }
     }
 
     private void UpdateBatteryColor()
     {
-        Color targetColor = Color.white; // 기본 색상 (잔량이 높을 때)
+        Color targetColor = Color.white;
 
-        // 설정된 임계값 리스트를 반복하여 현재 잔량에 맞는 색상 찾기
         foreach (var threshold in batteryColorThresholds)
         {
             if (currentBatteryLevel <= threshold.percentage)
@@ -230,7 +286,6 @@ public class UIManager : MonoBehaviour
             }
         }
 
-        // 배터리 이미지 색상 적용
         if (batterySlider != null)
         {
             batterySlider.color = targetColor;
@@ -241,13 +296,8 @@ public class UIManager : MonoBehaviour
     {
         Debug.Log("배터리가 모두 소모되었습니다. 게임 오버!");
 
-        // 게임 오버 패널의 Canvas Group 활성화 (페이드 인 로직은 Update에서 실행)
-        // isGameOver 플래그를 통해 Update의 페이드 인 로직이 시작됨
-
-        // 게임 일시 정지 (UI 페이드는 Time.unscaledDeltaTime로 계속 진행됨)
         Time.timeScale = 0;
 
-        // 깜빡이는 기능 정지
         CancelInvoke("BlinkRec");
         if (recIndicator != null)
         {
@@ -271,12 +321,10 @@ public class UIManager : MonoBehaviour
         {
             if (isCameraOn)
             {
-                // 카메라 켤 때 REC 깜빡임 재시작
                 InvokeRepeating("BlinkRec", 0.1f, blinkInterval);
             }
             else
             {
-                // 카메라 끌 때 REC 깜빡임 정지
                 CancelInvoke("BlinkRec");
                 recIndicator.enabled = false;
             }
@@ -285,33 +333,32 @@ public class UIManager : MonoBehaviour
 
     private void SetCameraActive(bool active)
     {
-        // 카메라 화면 전체 UI (Canvas)를 켜고 끕니다.
         if (cameraUIRoot != null)
         {
             cameraUIRoot.SetActive(active);
         }
 
-        // 카메라가 꺼지면 플래시도 강제로 끕니다.
         if (!active)
         {
             TurnFlashOff();
+            // 카메라가 꺼지면 줌 상태도 리셋 (Max FOV로 즉시 돌아감)
+            if (mainCamera != null) mainCamera.fieldOfView = camMaxFov;
+            isZoomed = false;
+            zoomTime = 0f;
         }
     }
 
     // 트리거 버튼 연결용: 플래시 On/Off 토글 (W 키)
     public void ToggleFlash()
     {
-        // A. 플래시 토글 전에 isCameraOn 상태를 콘솔에 출력
         Debug.Log("ToggleFlash 호출. isCameraOn: " + isCameraOn + ", isFlashOn: " + isFlashOn);
 
-        // B. 카메라가 꺼져 있거나 게임 오버 상태면 작동 중지
         if (isGameOver || !isCameraOn)
         {
             Debug.LogWarning("ToggleFlash 중지됨: 카메라 꺼짐 또는 게임 오버 상태.");
             return;
         }
 
-        // C. 연결이 되어 있지 않으면 즉시 경고 출력 (Null 체크 강화)
         if (flashLight == null)
         {
             Debug.LogError("오류: Flash Light 오브젝트가 UIManager 스크립트의 Flash Light 슬롯에 연결되어 있지 않거나 연결이 해제되었습니다!");
@@ -322,13 +369,11 @@ public class UIManager : MonoBehaviour
 
         if (isFlashOn)
         {
-            // 플래시 켜는 명령
             flashLight.enabled = true;
             Debug.Log("플래시 켜짐 최종 확인: Light.enabled = TRUE 설정됨.");
         }
         else
         {
-            // 플래시 끄는 명령
             flashLight.enabled = false;
             Debug.Log("플래시 꺼짐 최종 확인: Light.enabled = FALSE 설정됨.");
         }
@@ -340,17 +385,35 @@ public class UIManager : MonoBehaviour
         if (flashLight != null) flashLight.enabled = false;
     }
 
-    // --- 새 게임 시작 대기 및 버튼 이벤트 함수 ---
-
-    // 게임 오버 애니메이션 후 N초 대기 또는 특정 이벤트 발생 시 호출될 함수
-    public void continueToNewGame()
+    // === 줌 인/아웃 토글 함수 (x 키에 연결) ===
+    // 이 함수가 호출되면 줌 전환이 시작됩니다.
+    public void ToggleZoom()
     {
-        // 여기 애니메이터 끝나고 n초 후, 혹은 특정 상황에 게임 재시작 호출을 위해 이 함수를 불러주세요.
-        // 그리고, 이 함수에서 실제로 새 게임을 시작하는 함수로 연결해야 합니다.
-        // 예: Invoke("RestartLevel", 5f); 또는 SceneLoader.LoadScene("MainMenu");
+        if (isGameOver) return;
+        if (!isCameraOn)
+        {
+            Debug.LogWarning("줌 기능 중지됨: 카메라 꺼짐 상태.");
+            return;
+        }
+
+        // 줌 상태를 반전시키고 (토글)
+        isZoomed = !isZoomed;
+
+        // 전환 시간을 0으로 리셋하여 Update()에서 새로운 Lerp 전환 시작
+        zoomTime = 0f;
+
+        Debug.Log($"ToggleZoom 호출. 새로운 줌 상태: {(isZoomed ? "줌 인" : "줌 아웃")}");
     }
 
-    // 게임 오버 패널의 '다시 시작' 버튼에 연결할 함수 (기존 RestartLevel)
+
+    // --- 새 게임 시작 대기 및 버튼 이벤트 함수 ---
+
+    public void continueToNewGame()
+    {
+        // ...
+    }
+
+    // 게임 오버 패널의 '다시 시작' 버튼에 연결할 함수
     public void RestartLevel()
     {
         Time.timeScale = 1;
