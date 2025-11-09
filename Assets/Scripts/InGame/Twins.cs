@@ -1,77 +1,103 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.SceneManagement;
+using System.Collections;
 
-public class Twins : MonoBehaviour
+public class TwinsChaseKill : MonoBehaviour
 {
-    public enum ActionState
+    [Header("Refs")]
+    public Transform target;                  // Player Transform
+    public Animator animator;                 // Twins Animator(달리기만)
+    NavMeshAgent agent;
+
+    [Header("Chase")]
+    public float runSpeed = 5f;
+    public float repathInterval = 0.1f;
+
+    [Header("Kill")]
+    public float facePlayerSpeed = 12f;       // 회전 속도
+    public float restartDelay = 2.0f;         // 암전 후 재시작까지
+    public CanvasGroup fade;                  // 검은 화면 CanvasGroup
+    public float fadeTime = 0.6f;
+    public MonoBehaviour[] playerScriptsToDisable;
+
+    bool killing;
+    float tRepath;
+
+    void Awake()
     {
-        Idle, Walk, Run, Attack
-    }
-    public ActionState actionState = ActionState.Idle; //액션 상태
-
-    public float searchRange; //감지 거리
-    public float attackRange; //공격 거리
-    private NavMeshAgent agent; //내브메시 에이전트
-    public Animator animator; //애니메이터
-    public GameObject target; //타겟
-    public float walkSpeed; //걷기 속도
-    public float runSpeed; //달리기 속도
-
-    // Start is called before the first frame update
-    void Start()
-    {
-
+        agent = GetComponent<NavMeshAgent>();
+        if (!target) target = GameObject.FindGameObjectWithTag("Player")?.transform;
+        if (!animator) animator = GetComponent<Animator>();
+        agent.autoRepath = true;
+        agent.stoppingDistance = 0f;
+        agent.speed = runSpeed;
     }
 
-    // Update is called once per frame
     void Update()
     {
+        if (killing || !target) return;
 
+        tRepath += Time.deltaTime;
+        if (tRepath >= repathInterval)
+        {
+            tRepath = 0f;
+            agent.SetDestination(target.position);
+        }
+
+        // 달리기 애니 on
+        if (animator) animator.SetBool("Run", true);
     }
 
-    void TitanAction()
+    void OnTriggerEnter(Collider other)
     {
-        switch (actionState)
+        if (killing) return;
+        if (other.CompareTag("Player"))
         {
-            case ActionState.Idle:
-                {
-                    if (target)
-                    {
-                        TwinsAnimationOn(1); //걷기 애니메이션 실행
-                        agent.isStopped = false; //이동 중지 해제
-                        agent.SetDestination(target.transform.position); //타겟의 위치로 이동
-                        actionState = ActionState.Walk;
-                    }
-                    break;
-                }
-            case ActionState.Walk:
-                {
-                    //자신(거인)과 타겟과의 거리를 float형으로 반환
-                    float dist = Vector3.Distance(transform.position, target.transform.position);
-
-                    //타겟과의 거리가 공격 범위 안에 들어올 경우
-                    if (dist <= attackRange)
-                    {
-                        agent.isStopped = true; //이동 중지
-                        TwinsAnimationOn(2); //공격 애니메이션
-                        actionState = ActionState.Attack;
-                    }
-                    break;
-                }
-            case ActionState.Attack:
-                {
-                    {                      
-
-                    }
-                    break;
-                }
+            StartCoroutine(KillSequence(other.gameObject));
         }
     }
-    void TwinsAnimationOn(int i) //거인 애니메이션 함수
+
+    IEnumerator KillSequence(GameObject player)
     {
-        animator.SetInteger("TwinsState", i);
+        killing = true;
+
+        // 1) 적 정지 + 플레이어 조작 off
+        agent.isStopped = true; agent.ResetPath();
+        foreach (var mb in playerScriptsToDisable) if (mb) mb.enabled = false;
+
+        // 2) 적이 플레이어를 바라보게(짧은 보정)
+        float t = 0f;
+        while (t < 0.2f)
+        {
+            t += Time.deltaTime;
+            Vector3 look = player.transform.position; look.y = transform.position.y;
+            transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(look - transform.position), Time.deltaTime * facePlayerSpeed);
+            yield return null;
+        }
+
+        // (옵션) 플레이어 카메라에 살짝 흔들림/사운드 추가 가능
+
+        // 3) 암전
+        yield return StartCoroutine(Fade(1f, fadeTime));
+
+        // 4) 씬 리스타트
+        yield return new WaitForSeconds(restartDelay);
+        Scene scene = SceneManager.GetActiveScene();
+        SceneManager.LoadScene(scene.buildIndex);
+    }
+
+    IEnumerator Fade(float targetAlpha, float duration)
+    {
+        if (!fade) yield break;
+        float start = fade.alpha;
+        float t = 0f;
+        while (t < duration)
+        {
+            t += Time.deltaTime;
+            fade.alpha = Mathf.Lerp(start, targetAlpha, t / duration);
+            yield return null;
+        }
+        fade.alpha = targetAlpha;
     }
 }
-        

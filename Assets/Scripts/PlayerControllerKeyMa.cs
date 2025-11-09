@@ -67,7 +67,7 @@ public class PlayerControllerKeyMa : MonoBehaviour
         cc.SimpleMove(move);
 
         // 손전등 토글
-        if (Input.GetKeyDown(KeyCode.F) && handlight)
+        if (Input.GetKeyDown(KeyCode.N) && handlight)
         {
             flashlightOn = !flashlightOn;
             handlight.enabled = flashlightOn;
