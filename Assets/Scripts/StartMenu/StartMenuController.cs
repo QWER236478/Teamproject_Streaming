@@ -73,7 +73,7 @@ public class StartMenuController : MonoBehaviour
     {
         //ClickButton.Play();
         Debug.Log("게임시작");
-        //SceneManager.LoadScene("씬 이름"); 
+        SceneManager.LoadScene("Chapter2"); 
     }
 
     public void OnLoadGameClick() //이어하기 버튼
