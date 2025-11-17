@@ -1,129 +1,151 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using UnityEngine.UI;
-using TMPro; // TextMeshPro¸¦ »ç¿ëÇÏ·Á¸é ÇÊ¿ä
-using UnityEngine.SceneManagement; // ¾À °ü¸®¸¦ À§ÇØ ÇÊ¿ä (Àç½ÃÀÛ ±â´É)
-using System.Collections.Generic; // List »ç¿ëÀ» À§ÇØ ÇÊ¿ä
+using TMPro; // TextMeshProë¥¼ ì‚¬ìš©í•˜ë ¤ë©´ í•„ìš”
+using UnityEngine.SceneManagement; // ì”¬ ê´€ë¦¬ë¥¼ ìœ„í•´ í•„ìš” (ì¬ì‹œì‘ ê¸°ëŠ¥)
+using System.Collections.Generic;
+using System.Collections; // List ì‚¬ìš©ì„ ìœ„í•´ í•„ìš”
+using System.IO;
 
 public class UIManager : MonoBehaviour
 {
-    // === UI ¿ä¼Ò ¿¬°á º¯¼ö ===
-    // Å¸ÀÌ¸Ó
+Â  Â  //ì‚¬ì§„ ì´¬ì˜
+Â  Â  [Header("ì‚¬ì§„ ì´¬ì˜ ì„¤ì •")]
+    public CanvasGroup photoDisplayCanvasGroup; // ì´¬ì˜ëœ ì‚¬ì§„ì„ ë³´ì—¬ì¤„ íŒ¨ë„ì˜ Canvas Group
+Â  Â  public RawImage photoDisplayImage;Â  Â  Â  Â  Â  // ì´¬ì˜ëœ ì‚¬ì§„ì„ í‘œì‹œí•  RawImage
+Â  Â  public float photoDisplayDuration = 3f;Â  Â  Â // ì´¬ì˜ëœ ì‚¬ì§„ì„ ë³´ì—¬ì¤„ ì‹œê°„ (ì´ˆ)
+Â  Â  public string screenshotFolderName = "Screenshots"; // ìŠ¤í¬ë¦°ìƒ· ì €ì¥ í´ë” ì´ë¦„
+
+    // === UI ìš”ì†Œ ì—°ê²° ë³€ìˆ˜ ===
+    // íƒ€ì´ë¨¸
     public TextMeshProUGUI timerText;
-    // REC ±ôºıÀÓ
-    public Image recIndicator; // REC Ç¥½Ã ÀÌ¹ÌÁö ¿ÀºêÁ§Æ®
-    public float blinkInterval = 0.5f; // ±ôºıÀÌ´Â °£°İ (0.5ÃÊ¸¶´Ù)
+Â  Â  // REC ê¹œë¹¡ì„
+Â  Â  public Image recIndicator; // REC í‘œì‹œ ì´ë¯¸ì§€ ì˜¤ë¸Œì íŠ¸
+Â  Â  public float blinkInterval = 0.5f; // ê¹œë¹¡ì´ëŠ” ê°„ê²© (0.5ì´ˆë§ˆë‹¤)
 
-    // ¹èÅÍ¸®
-    public Image batterySlider; // ½½¶óÀÌ´õ¿¡¼­ Image fill ¹æ½ÄÀ¸·Î º¯°æµÈ ¿ÀºêÁ§Æ®
-    public TextMeshProUGUI batteryPercentText;
-    public float initialBatteryLevel = 100f; // 0 ~ 100 »çÀÌÀÇ °ª
+Â  Â  // ë°°í„°ë¦¬
+Â  Â  public Image batterySlider; // ìŠ¬ë¼ì´ë”ì—ì„œ Image fill ë°©ì‹ìœ¼ë¡œ ë³€ê²½ëœ ì˜¤ë¸Œì íŠ¸
+Â  Â  public TextMeshProUGUI batteryPercentText;
+    public float initialBatteryLevel = 100f; // 0 ~ 100 ì‚¬ì´ì˜ ê°’
 
-    // === ¹èÅÍ¸® »ö»ó ¼³Á¤ º¯¼ö ===
-    [System.Serializable]
+Â  Â  // === ë°°í„°ë¦¬ ìƒ‰ìƒ ì„¤ì • ë³€ìˆ˜ ===
+Â  Â  [System.Serializable]
     public class BatteryColorThreshold
     {
-        public float percentage; // ÇØ´ç »ö»óÀ¸·Î º¯ÇÏ´Â ±âÁØ ÆÛ¼¾Æ® (¿¹: 50% ÀÌÇÏ)
-        public Color color;      // Àû¿ëµÉ »ö»ó
-    }
+        public float percentage; // í•´ë‹¹ ìƒ‰ìƒìœ¼ë¡œ ë³€í•˜ëŠ” ê¸°ì¤€ í¼ì„¼íŠ¸ (ì˜ˆ: 50% ì´í•˜)
+Â  Â  Â  Â  public Color color;Â  Â  Â  // ì ìš©ë  ìƒ‰ìƒ
+Â  Â  }
 
-    // ÆÛ¼¾Æ® ±âÁØ°ú »ö»óÀ» ¼³Á¤ÇÏ´Â ¸®½ºÆ® (ÀÎ½ºÆåÅÍ¿¡¼­ °ü¸®)
-    public List<BatteryColorThreshold> batteryColorThresholds = new List<BatteryColorThreshold>();
+Â  Â  // í¼ì„¼íŠ¸ ê¸°ì¤€ê³¼ ìƒ‰ìƒì„ ì„¤ì •í•˜ëŠ” ë¦¬ìŠ¤íŠ¸ (ì¸ìŠ¤í™í„°ì—ì„œ ê´€ë¦¬)
+Â  Â  public List<BatteryColorThreshold> batteryColorThresholds = new List<BatteryColorThreshold>();
 
-    // === Ä«¸Ş¶ó/ÇÃ·¡½Ã °ü·Ã º¯¼ö ===
-    public GameObject cameraUIRoot; // Ä«¸Ş¶ó UI ÀüÃ¼ (Canvas)
-    public Light flashLight;        // ¾À¿¡ Ãß°¡ÇÒ ÇÃ·¡½Ã ¶óÀÌÆ® ¿ÀºêÁ§Æ®
+Â  Â  // === ì¹´ë©”ë¼/í”Œë˜ì‹œ ê´€ë ¨ ë³€ìˆ˜ ===
+Â  Â  public GameObject cameraUIRoot; // ì¹´ë©”ë¼ UI ì „ì²´ (Canvas)
+Â  Â  public Light flashLight;Â  Â  Â  Â  // ì”¬ì— ì¶”ê°€í•  í”Œë˜ì‹œ ë¼ì´íŠ¸ ì˜¤ë¸Œì íŠ¸
 
-    public float normalDrainRate = 1f; // Æò»ó½Ã ÃÊ´ç ¹èÅÍ¸® ¼Ò¸ğÀ²
-    public float flashDrainIncrease = 5f; // ÇÃ·¡½Ã ÄÓ ¶§ Ãß°¡µÇ´Â ¼Ò¸ğÀ²
+Â  Â  public float normalDrainRate = 1f; // í‰ìƒì‹œ ì´ˆë‹¹ ë°°í„°ë¦¬ ì†Œëª¨ìœ¨
+Â  Â  public float flashDrainIncrease = 5f; // í”Œë˜ì‹œ ì¼¤ ë•Œ ì¶”ê°€ë˜ëŠ” ì†Œëª¨ìœ¨
+Â  Â  public float fadeDuration = 1.0f;
+Â  Â  // === Canvas Group ë³€ìˆ˜ ===
+Â  Â  // ê²Œì„ ì˜¤ë²„
+Â  Â  public CanvasGroup gameOverCanvasGroup; // ê²Œì„ ì˜¤ë²„ íŒ¨ë„ì˜ Canvas Group
+Â  Â  public CanvasGroup inGameHudCanvasGroup; // ì¸ê²Œì„ HUD (íƒ€ì´ë¨¸, ë°°í„°ë¦¬ ë“±)ì˜ CanvasGroup
+Â  Â  public float fadeOutTimeFactor = 1.0f; // í˜ì´ë“œ ì•„ì›ƒ/ì¸ ì‹œê°„ ì¡°ì ˆ (í´ìˆ˜ë¡ ëŠë ¤ì§)
 
-    // === Canvas Group º¯¼ö ===
-    // °ÔÀÓ ¿À¹ö
-    public CanvasGroup gameOverCanvasGroup; // °ÔÀÓ ¿À¹ö ÆĞ³ÎÀÇ Canvas Group
-    public CanvasGroup inGameHudCanvasGroup; // ÀÎ°ÔÀÓ HUD (Å¸ÀÌ¸Ó, ¹èÅÍ¸® µî)ÀÇ CanvasGroup
-    public float fadeOutTimeFactor = 1.0f; // ÆäÀÌµå ¾Æ¿ô/ÀÎ ½Ã°£ Á¶Àı (Å¬¼ö·Ï ´À·ÁÁü)
-
-    // === ÁÜ ¼³Á¤ (»õ·Î Ãß°¡) ===
-    [Tooltip("Ä«¸Ş¶ó ÄÄÆ÷³ÍÆ®¸¦ ¿¬°áÇØÁÖ¼¼¿ä. (XR Origin > Camera Offset > Main Camera)")]
+Â  Â  // === ì¤Œ ì„¤ì • (ìƒˆë¡œ ì¶”ê°€) ===
+Â  Â  [Tooltip("ì¹´ë©”ë¼ ì»´í¬ë„ŒíŠ¸ë¥¼ ì—°ê²°í•´ì£¼ì„¸ìš”. (XR Origin > Camera Offset > Main Camera)")]
     public Camera mainCamera;
-    [Header("ÁÜ ¼³Á¤")]
-    [Tooltip("ÃÖ´ë ÁÜ ÀÎ ½Ã FOV °ª (Á¼Àº ½Ã¾ß)")]
+    [Header("ì¤Œ ì„¤ì •")]
+    [Tooltip("ìµœëŒ€ ì¤Œ ì¸ ì‹œ FOV ê°’ (ì¢ì€ ì‹œì•¼)")]
     public float camMinFov = 30f;
-    [Tooltip("±âº»/ÃÖ´ë ÁÜ ¾Æ¿ô ½Ã FOV °ª (³ĞÀº ½Ã¾ß)")]
+    [Tooltip("ê¸°ë³¸/ìµœëŒ€ ì¤Œ ì•„ì›ƒ ì‹œ FOV ê°’ (ë„“ì€ ì‹œì•¼)")]
     public float camMaxFov = 90f;
-    [Tooltip("ÁÜ ÀüÈ¯¿¡ °É¸®´Â ½Ã°£ (ÃÊ)")]
+    [Tooltip("ì¤Œ ì „í™˜ì— ê±¸ë¦¬ëŠ” ì‹œê°„ (ì´ˆ)")]
     public float zoomDuration = 0.5f;
-    [Tooltip("ÁÜ ÀüÈ¯ ¼Óµµ °î¼± (Lerp ½Ã »ç¿ë)")]
+    [Tooltip("ì¤Œ ì „í™˜ ì†ë„ ê³¡ì„  (Lerp ì‹œ ì‚¬ìš©)")]
     public AnimationCurve zoomCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
+    // === ì‚¬ìš´ë“œ ë° í”Œë˜ì‹œ ë™ê¸°í™” ì„¤ì • (ì´ ë¶€ë¶„ì´ ë‚˜íƒ€ë‚˜ì•¼ í•©ë‹ˆë‹¤!) ===
+    [Header("ì‚¬ìš´ë“œ ë° í”Œë˜ì‹œ ì„¤ì •")]
+    [Tooltip("ì‚¬ìš´ë“œ ì¬ìƒì„ ë‹´ë‹¹í•  AudioSource ì»´í¬ë„ŒíŠ¸ë¥¼ ì—°ê²°í•©ë‹ˆë‹¤.")]
+    public AudioSource audioSource;
+    [Tooltip("ì‚¬ì§„ ì´¬ì˜ ì‹œ ì¬ìƒí•  ì°°ì¹µ(Shutter) AudioClipì„ ì—°ê²°í•©ë‹ˆë‹¤.")]
+    public AudioClip photoCaptureSound;
+    [Tooltip("í™”ë©´ ì „ì²´ë¥¼ ë®ëŠ” í°ìƒ‰ í”Œë˜ì‹œ íŒ¨ë„ì˜ Canvas Groupì„ ì—°ê²°í•©ë‹ˆë‹¤.")]
+    public CanvasGroup shutterFlashCanvasGroup;
+    public float visualFlashDuration = 0.1f;
 
-
-    // === ³»ºÎ »óÅÂ º¯¼ö ===
+    // === ë‚´ë¶€ ìƒíƒœ ë³€ìˆ˜ ===
     private float timeElapsed = 0f;
     private float currentBatteryLevel;
     private bool isGameOver = false;
     private bool isCameraOn = true;
-    private bool isFlashOn = false; // ÇÃ·¡½Ã´Â ²¨Áø »óÅÂ·Î ½ÃÀÛ
+    private bool isFlashOn = false; // í”Œë˜ì‹œëŠ” êº¼ì§„ ìƒíƒœë¡œ ì‹œì‘
+Â  Â  private bool isPhotoTaken = false;
+Â  Â  // === ì¤Œ ìƒíƒœ ë³€ìˆ˜ ì¶”ê°€ ===
+Â  Â  private bool isZoomed = false; // í˜„ì¬ ì¤Œ ì¸ ìƒíƒœì¸ì§€
+Â  Â  private float zoomTime = 0f;Â  Â  // ì¤Œ ì „í™˜ ê²½ê³¼ ì‹œê°„
 
-    // === ÁÜ »óÅÂ º¯¼ö Ãß°¡ ===
-    private bool isZoomed = false; // ÇöÀç ÁÜ ÀÎ »óÅÂÀÎÁö
-    private float zoomTime = 0f;    // ÁÜ ÀüÈ¯ °æ°ú ½Ã°£
 
-
-    void Start()
+Â  Â  void Start()
     {
         currentBatteryLevel = initialBatteryLevel;
         Time.timeScale = 1;
 
-        // HUD Åõ¸íµµ ÃÊ±âÈ­ ¹× È°¼ºÈ­
-        if (inGameHudCanvasGroup != null)
+Â  Â  Â  Â  // HUD íˆ¬ëª…ë„ ì´ˆê¸°í™” ë° í™œì„±í™”
+Â  Â  Â  Â  if (inGameHudCanvasGroup != null)
         {
             inGameHudCanvasGroup.alpha = 1f;
             SetCanvasGroupState(inGameHudCanvasGroup, true);
         }
 
-        // °ÔÀÓ ¿À¹ö ÆĞ³Î Åõ¸íµµ ÃÊ±âÈ­ ¹× ºñÈ°¼ºÈ­
-        if (gameOverCanvasGroup != null)
+Â  Â  Â  Â  // ê²Œì„ ì˜¤ë²„ íŒ¨ë„ íˆ¬ëª…ë„ ì´ˆê¸°í™” ë° ë¹„í™œì„±í™”
+Â  Â  Â  Â  if (gameOverCanvasGroup != null)
         {
             gameOverCanvasGroup.alpha = 0f;
             SetCanvasGroupState(gameOverCanvasGroup, false);
         }
 
-        // ÃÊ±â Ä«¸Ş¶ó UI »óÅÂ ¼³Á¤
-        SetCameraActive(true);
+Â  Â  Â  Â  // ì´ˆê¸° ì¹´ë©”ë¼ UI ìƒíƒœ ì„¤ì •
+Â  Â  Â  Â  SetCameraActive(true);
 
-        // ÃÊ±â ÇÃ·¡½Ã »óÅÂ ¼³Á¤
-        if (flashLight != null) flashLight.enabled = false;
+Â  Â  Â  Â  // ì´ˆê¸° í”Œë˜ì‹œ ìƒíƒœ ì„¤ì •
+Â  Â  Â  Â  if (flashLight != null) flashLight.enabled = false;
 
-        // ÁÜ ±â´É ÃÊ±âÈ­: Main Camera ¿¬°á ¹× FOV ±âº»°ª ¼³Á¤
-        if (mainCamera == null)
+Â  Â  Â  Â  // ì¤Œ ê¸°ëŠ¥ ì´ˆê¸°í™”: Main Camera ì—°ê²° ë° FOV ê¸°ë³¸ê°’ ì„¤ì •
+Â  Â  Â  Â  if (mainCamera == null)
         {
             mainCamera = FindObjectOfType<Camera>();
         }
         if (mainCamera != null)
         {
-            // ½ÃÀÛ ½Ã ÃÖ´ë ÁÜ ¾Æ¿ô(±âº») »óÅÂ·Î ¼³Á¤
-            mainCamera.fieldOfView = camMaxFov;
+Â  Â  Â  Â  Â  Â  // ì‹œì‘ ì‹œ ìµœëŒ€ ì¤Œ ì•„ì›ƒ(ê¸°ë³¸) ìƒíƒœë¡œ ì„¤ì •
+Â  Â  Â  Â  Â  Â  mainCamera.fieldOfView = camMaxFov;
         }
 
 
-        // ¹èÅÍ¸® UI ÃÊ±â ¾÷µ¥ÀÌÆ® (»ö»ó ¹× Fill)
-        UpdateBatteryUI();
+Â  Â  Â  Â  // ë°°í„°ë¦¬ UI ì´ˆê¸° ì—…ë°ì´íŠ¸ (ìƒ‰ìƒ ë° Fill)
+Â  Â  Â  Â  UpdateBatteryUI();
 
         if (recIndicator != null)
         {
             InvokeRepeating("BlinkRec", 0.1f, blinkInterval);
         }
 
-        // »ö»ó ¸®½ºÆ®¸¦ ÆÛ¼¾Æ®°¡ ³·Àº ¼ø¼­(³ôÀº ¿ì¼±¼øÀ§)·Î Á¤·Ä
-        batteryColorThresholds.Sort((a, b) => a.percentage.CompareTo(b.percentage));
+Â  Â  Â  Â  // ìƒ‰ìƒ ë¦¬ìŠ¤íŠ¸ë¥¼ í¼ì„¼íŠ¸ê°€ ë‚®ì€ ìˆœì„œ(ë†’ì€ ìš°ì„ ìˆœìœ„)ë¡œ ì •ë ¬
+Â  Â  Â  Â  batteryColorThresholds.Sort((a, b) => a.percentage.CompareTo(b.percentage));
+        if (photoDisplayCanvasGroup != null)
+        {
+            photoDisplayCanvasGroup.alpha = 0f;
+            SetCanvasGroupState(photoDisplayCanvasGroup, false);
+        }
     }
 
     void Update()
     {
-        // Ä«¸Ş¶ó°¡ ²¨Á® ÀÖ°Å³ª °ÔÀÓ ¿À¹ö »óÅÂ¸é Å¸ÀÌ¸Ó/¹èÅÍ¸® ¼Ò¸ğ Á¤Áö
-        if (isGameOver || !isCameraOn)
+Â  Â  Â  Â  // ì¹´ë©”ë¼ê°€ êº¼ì ¸ ìˆê±°ë‚˜ ê²Œì„ ì˜¤ë²„ ìƒíƒœë©´ íƒ€ì´ë¨¸/ë°°í„°ë¦¬ ì†Œëª¨ ì •ì§€
+Â  Â  Â  Â  if (isGameOver || !isCameraOn)
         {
-            // °ÔÀÓ ¿À¹ö »óÅÂÀÏ ¶§´Â HUD ÆäÀÌµå ¾Æ¿ô, °ÔÀÓ ¿À¹ö ÆĞ³Î ÆäÀÌµå ÀÎ ·ÎÁ÷À» ½ÇÇà
-            if (isGameOver)
+Â  Â  Â  Â  Â  Â  // ê²Œì„ ì˜¤ë²„ ìƒíƒœì¼ ë•ŒëŠ” HUD í˜ì´ë“œ ì•„ì›ƒ, ê²Œì„ ì˜¤ë²„ íŒ¨ë„ í˜ì´ë“œ ì¸ ë¡œì§ì„ ì‹¤í–‰
+Â  Â  Â  Â  Â  Â  if (isGameOver)
             {
                 FadeOutHud();
                 FadeInGameOverPanel();
@@ -132,95 +154,121 @@ public class UIManager : MonoBehaviour
                 return;
         }
 
-        // 1. Å¸ÀÌ¸Ó ¾÷µ¥ÀÌÆ® ·ÎÁ÷
-        UpdateTimer();
+Â  Â  Â  Â  // 1. íƒ€ì´ë¨¸ ì—…ë°ì´íŠ¸ ë¡œì§
+Â  Â  Â  Â  UpdateTimer();
 
-        // 2. ¹èÅÍ¸® ¼Ò¸ğ ·ÎÁ÷
-        DrainBattery();
+Â  Â  Â  Â  // 2. ë°°í„°ë¦¬ ì†Œëª¨ ë¡œì§
+Â  Â  Â  Â  DrainBattery();
 
-        // 3. ÁÜ ÀüÈ¯ ·ÎÁ÷ (Lerp ±¸µ¿)
-        HandleZoomTransition();
+Â  Â  Â  Â  // 3. ì¤Œ ì „í™˜ ë¡œì§ (Lerp êµ¬ë™)
+Â  Â  Â  Â  HandleZoomTransition();
     }
 
-    // === ÁÜ ÀüÈ¯ ·ÎÁ÷ (Update¿¡¼­ Lerp¸¦ ±¸µ¿) ===
-    private void HandleZoomTransition()
+Â  Â  // === ì¤Œ ì „í™˜ ë¡œì§ (Updateì—ì„œ Lerpë¥¼ êµ¬ë™) ===
+Â  Â  private void HandleZoomTransition()
     {
         if (mainCamera == null) return;
 
-        // ÁÜ ÀüÈ¯ °æ°ú ½Ã°£ÀÌ ¼³Á¤µÈ Áö¼Ó ½Ã°£º¸´Ù ÀÛÀ» ¶§¸¸ Lerp ÁøÇà
-        if (zoomTime < zoomDuration)
+Â  Â  Â  Â  // ì¤Œ ì „í™˜ ê²½ê³¼ ì‹œê°„ì´ ì„¤ì •ëœ ì§€ì† ì‹œê°„ë³´ë‹¤ ì‘ì„ ë•Œë§Œ Lerp ì§„í–‰
+Â  Â  Â  Â  if (zoomTime < zoomDuration)
         {
             zoomTime += Time.deltaTime;
             float normalizedTime = Mathf.Clamp01(zoomTime / zoomDuration);
 
-            // AnimationCurve¸¦ Àû¿ëÇÑ ½Ã°£ °ª
-            float curveValue = zoomCurve.Evaluate(normalizedTime);
+Â  Â  Â  Â  Â  Â  // AnimationCurveë¥¼ ì ìš©í•œ ì‹œê°„ ê°’
+Â  Â  Â  Â  Â  Â  float curveValue = zoomCurve.Evaluate(normalizedTime);
 
             float startFOV, endFOV;
 
             if (isZoomed)
             {
-                // ÁÜ ÀÎ ÀüÈ¯ Áß: Max -> Min
-                startFOV = camMaxFov;
+Â  Â  Â  Â  Â  Â  Â  Â  // ì¤Œ ì¸ ì „í™˜ ì¤‘: Max -> Min
+Â  Â  Â  Â  Â  Â  Â  Â  startFOV = camMaxFov;
                 endFOV = camMinFov;
             }
             else
             {
-                // ÁÜ ¾Æ¿ô ÀüÈ¯ Áß: Min -> Max
-                startFOV = camMinFov;
+Â  Â  Â  Â  Â  Â  Â  Â  // ì¤Œ ì•„ì›ƒ ì „í™˜ ì¤‘: Min -> Max
+Â  Â  Â  Â  Â  Â  Â  Â  startFOV = camMinFov;
                 endFOV = camMaxFov;
             }
 
-            // Lerp¸¦ »ç¿ëÇÏ¿© FOV¸¦ ºÎµå·´°Ô ÀüÈ¯
-            mainCamera.fieldOfView = Mathf.Lerp(startFOV, endFOV, curveValue);
+Â  Â  Â  Â  Â  Â  // Lerpë¥¼ ì‚¬ìš©í•˜ì—¬ FOVë¥¼ ë¶€ë“œëŸ½ê²Œ ì „í™˜
+Â  Â  Â  Â  Â  Â  mainCamera.fieldOfView = Mathf.Lerp(startFOV, endFOV, curveValue);
         }
     }
 
 
-    // Canvas GroupÀÇ »óÈ£ÀÛ¿ë ¹× ·¹ÀÌÄ³½ºÆ® ¼³Á¤À» ÀÏ°ı Ã³¸®
-    private void SetCanvasGroupState(CanvasGroup cg, bool active)
+Â  Â  // Canvas Groupì˜ ìƒí˜¸ì‘ìš© ë° ë ˆì´ìºìŠ¤íŠ¸ ì„¤ì •ì„ ì¼ê´„ ì²˜ë¦¬
+Â  Â  private void SetCanvasGroupState(CanvasGroup cg, bool active)
     {
         if (cg == null) return;
         cg.interactable = active;
         cg.blocksRaycasts = active;
     }
+Â  Â  // ì½”ë£¨í‹´ ê¸°ë°˜ Canvas Group í˜ì´ë“œ í•¨ìˆ˜ (ê¸°ì¡´ FadeCanvasGroup ì¬ì‚¬ìš©)
+Â  Â  private IEnumerator FadeCanvasGroup(CanvasGroup cg, float endAlpha, float duration)
+    {
+        if (cg == null) yield break;
 
-    // °ÔÀÓ ¿À¹ö ½Ã HUD¸¦ ÆäÀÌµå ¾Æ¿ô½ÃÅ°´Â ·ÎÁ÷
-    private void FadeOutHud()
+        float startAlpha = cg.alpha;
+        float time = 0;
+
+        if (endAlpha > startAlpha)
+        {
+            SetCanvasGroupState(cg, true);
+        }
+
+        while (time < duration)
+        {
+            time += Time.unscaledDeltaTime;
+            float t = time / duration;
+            cg.alpha = Mathf.Lerp(startAlpha, endAlpha, t);
+            yield return null;
+        }
+
+        cg.alpha = endAlpha;
+        if (endAlpha == 0)
+        {
+            SetCanvasGroupState(cg, false);
+        }
+    }
+Â  Â  // ê²Œì„ ì˜¤ë²„ ì‹œ HUDë¥¼ í˜ì´ë“œ ì•„ì›ƒì‹œí‚¤ëŠ” ë¡œì§
+Â  Â  private void FadeOutHud()
     {
         if (inGameHudCanvasGroup == null) return;
 
-        // Time.timeScale = 0 »óÅÂ¿¡¼­µµ ÀÛµ¿ÇÏµµ·Ï UnscaledDeltaTime »ç¿ë
-        inGameHudCanvasGroup.alpha = Mathf.MoveTowards(
-            inGameHudCanvasGroup.alpha,
-            0f,
-            Time.unscaledDeltaTime / fadeOutTimeFactor
-        );
+Â  Â  Â  Â  // Time.timeScale = 0 ìƒíƒœì—ì„œë„ ì‘ë™í•˜ë„ë¡ UnscaledDeltaTime ì‚¬ìš©
+Â  Â  Â  Â  inGameHudCanvasGroup.alpha = Mathf.MoveTowards(
+      inGameHudCanvasGroup.alpha,
+      0f,
+      Time.unscaledDeltaTime / fadeOutTimeFactor
+    );
 
-        // Åõ¸íµµ°¡ °ÅÀÇ 0¿¡ µµ´ŞÇÏ¸é »óÈ£ÀÛ¿ëÀ» ¸·À½
-        if (inGameHudCanvasGroup.alpha < 0.01f)
+Â  Â  Â  Â  // íˆ¬ëª…ë„ê°€ ê±°ì˜ 0ì— ë„ë‹¬í•˜ë©´ ìƒí˜¸ì‘ìš©ì„ ë§‰ìŒ
+Â  Â  Â  Â  if (inGameHudCanvasGroup.alpha < 0.01f)
         {
             SetCanvasGroupState(inGameHudCanvasGroup, false);
         }
     }
 
-    // °ÔÀÓ ¿À¹ö ½Ã ÆĞ³ÎÀ» ÆäÀÌµå ÀÎ½ÃÅ°´Â ·ÎÁ÷
-    private void FadeInGameOverPanel()
+Â  Â  // ê²Œì„ ì˜¤ë²„ ì‹œ íŒ¨ë„ì„ í˜ì´ë“œ ì¸ì‹œí‚¤ëŠ” ë¡œì§
+Â  Â  private void FadeInGameOverPanel()
     {
         if (gameOverCanvasGroup == null) return;
 
-        // ÆäÀÌµå ÀÎ ½ÃÀÛ ½Ã »óÈ£ÀÛ¿ë È°¼ºÈ­
-        if (gameOverCanvasGroup.alpha == 0f)
+Â  Â  Â  Â  // í˜ì´ë“œ ì¸ ì‹œì‘ ì‹œ ìƒí˜¸ì‘ìš© í™œì„±í™”
+Â  Â  Â  Â  if (gameOverCanvasGroup.alpha == 0f)
         {
             SetCanvasGroupState(gameOverCanvasGroup, true);
         }
 
-        // Time.timeScale = 0 »óÅÂ¿¡¼­µµ ÀÛµ¿ÇÏµµ·Ï UnscaledDeltaTime »ç¿ë
-        gameOverCanvasGroup.alpha = Mathf.MoveTowards(
-            gameOverCanvasGroup.alpha,
-            1f,
-            Time.unscaledDeltaTime / fadeOutTimeFactor
-        );
+Â  Â  Â  Â  // Time.timeScale = 0 ìƒíƒœì—ì„œë„ ì‘ë™í•˜ë„ë¡ UnscaledDeltaTime ì‚¬ìš©
+Â  Â  Â  Â  gameOverCanvasGroup.alpha = Mathf.MoveTowards(
+      gameOverCanvasGroup.alpha,
+      1f,
+      Time.unscaledDeltaTime / fadeOutTimeFactor
+    );
     }
 
     void BlinkRec()
@@ -294,7 +342,7 @@ public class UIManager : MonoBehaviour
 
     private void ShowGameOver()
     {
-        Debug.Log("¹èÅÍ¸®°¡ ¸ğµÎ ¼Ò¸ğµÇ¾ú½À´Ï´Ù. °ÔÀÓ ¿À¹ö!");
+        Debug.Log("ë°°í„°ë¦¬ê°€ ëª¨ë‘ ì†Œëª¨ë˜ì—ˆìŠµë‹ˆë‹¤. ê²Œì„ ì˜¤ë²„!");
 
         Time.timeScale = 0;
 
@@ -305,14 +353,14 @@ public class UIManager : MonoBehaviour
         }
     }
 
-    // --- »õ·Î¿î Ä«¸Ş¶ó/ÇÃ·¡½Ã Á¦¾î ÇÔ¼ö ---
+Â  Â  // --- ìƒˆë¡œìš´ ì¹´ë©”ë¼/í”Œë˜ì‹œ ì œì–´ í•¨ìˆ˜ ---
 
-    // ±×¸³ ¹öÆ° ¿¬°á¿ë: Ä«¸Ş¶ó On/Off Åä±Û (Q Å°)
-    public void ToggleCamera()
+Â  Â  // ê·¸ë¦½ ë²„íŠ¼ ì—°ê²°ìš©: ì¹´ë©”ë¼ On/Off í† ê¸€ (Q í‚¤)
+Â  Â  public void ToggleCamera()
     {
         if (isGameOver) return;
 
-        Debug.Log("ToggleCamera È£ÃâµÊ. Åä±Û Àü isCameraOn »óÅÂ: " + isCameraOn);
+        Debug.Log("ToggleCamera í˜¸ì¶œë¨. í† ê¸€ ì „ isCameraOn ìƒíƒœ: " + isCameraOn);
 
         isCameraOn = !isCameraOn;
         SetCameraActive(isCameraOn);
@@ -341,27 +389,27 @@ public class UIManager : MonoBehaviour
         if (!active)
         {
             TurnFlashOff();
-            // Ä«¸Ş¶ó°¡ ²¨Áö¸é ÁÜ »óÅÂµµ ¸®¼Â (Max FOV·Î Áï½Ã µ¹¾Æ°¨)
-            if (mainCamera != null) mainCamera.fieldOfView = camMaxFov;
+Â  Â  Â  Â  Â  Â  // ì¹´ë©”ë¼ê°€ êº¼ì§€ë©´ ì¤Œ ìƒíƒœë„ ë¦¬ì…‹ (Max FOVë¡œ ì¦‰ì‹œ ëŒì•„ê°)
+Â  Â  Â  Â  Â  Â  if (mainCamera != null) mainCamera.fieldOfView = camMaxFov;
             isZoomed = false;
             zoomTime = 0f;
         }
     }
 
-    // Æ®¸®°Å ¹öÆ° ¿¬°á¿ë: ÇÃ·¡½Ã On/Off Åä±Û (W Å°)
-    public void ToggleFlash()
+Â  Â  // íŠ¸ë¦¬ê±° ë²„íŠ¼ ì—°ê²°ìš©: í”Œë˜ì‹œ On/Off í† ê¸€ (W í‚¤)
+Â  Â  public void ToggleFlash()
     {
-        Debug.Log("ToggleFlash È£Ãâ. isCameraOn: " + isCameraOn + ", isFlashOn: " + isFlashOn);
+        Debug.Log("ToggleFlash í˜¸ì¶œ. isCameraOn: " + isCameraOn + ", isFlashOn: " + isFlashOn);
 
         if (isGameOver || !isCameraOn)
         {
-            Debug.LogWarning("ToggleFlash ÁßÁöµÊ: Ä«¸Ş¶ó ²¨Áü ¶Ç´Â °ÔÀÓ ¿À¹ö »óÅÂ.");
+            Debug.LogWarning("ToggleFlash ì¤‘ì§€ë¨: ì¹´ë©”ë¼ êº¼ì§ ë˜ëŠ” ê²Œì„ ì˜¤ë²„ ìƒíƒœ.");
             return;
         }
 
         if (flashLight == null)
         {
-            Debug.LogError("¿À·ù: Flash Light ¿ÀºêÁ§Æ®°¡ UIManager ½ºÅ©¸³Æ®ÀÇ Flash Light ½½·Ô¿¡ ¿¬°áµÇ¾î ÀÖÁö ¾Ê°Å³ª ¿¬°áÀÌ ÇØÁ¦µÇ¾ú½À´Ï´Ù!");
+            Debug.LogError("ì˜¤ë¥˜: Flash Light ì˜¤ë¸Œì íŠ¸ê°€ UIManager ìŠ¤í¬ë¦½íŠ¸ì˜ Flash Light ìŠ¬ë¡¯ì— ì—°ê²°ë˜ì–´ ìˆì§€ ì•Šê±°ë‚˜ ì—°ê²°ì´ í•´ì œë˜ì—ˆìŠµë‹ˆë‹¤!");
             return;
         }
 
@@ -370,12 +418,12 @@ public class UIManager : MonoBehaviour
         if (isFlashOn)
         {
             flashLight.enabled = true;
-            Debug.Log("ÇÃ·¡½Ã ÄÑÁü ÃÖÁ¾ È®ÀÎ: Light.enabled = TRUE ¼³Á¤µÊ.");
+            Debug.Log("í”Œë˜ì‹œ ì¼œì§ ìµœì¢… í™•ì¸: Light.enabled = TRUE ì„¤ì •ë¨.");
         }
         else
         {
             flashLight.enabled = false;
-            Debug.Log("ÇÃ·¡½Ã ²¨Áü ÃÖÁ¾ È®ÀÎ: Light.enabled = FALSE ¼³Á¤µÊ.");
+            Debug.Log("í”Œë˜ì‹œ êº¼ì§ ìµœì¢… í™•ì¸: Light.enabled = FALSE ì„¤ì •ë¨.");
         }
     }
 
@@ -385,36 +433,135 @@ public class UIManager : MonoBehaviour
         if (flashLight != null) flashLight.enabled = false;
     }
 
-    // === ÁÜ ÀÎ/¾Æ¿ô Åä±Û ÇÔ¼ö (x Å°¿¡ ¿¬°á) ===
-    // ÀÌ ÇÔ¼ö°¡ È£ÃâµÇ¸é ÁÜ ÀüÈ¯ÀÌ ½ÃÀÛµË´Ï´Ù.
-    public void ToggleZoom()
+Â  Â  // === ì¤Œ ì¸/ì•„ì›ƒ í† ê¸€ í•¨ìˆ˜ (x í‚¤ì— ì—°ê²°) ===
+Â  Â  // ì´ í•¨ìˆ˜ê°€ í˜¸ì¶œë˜ë©´ ì¤Œ ì „í™˜ì´ ì‹œì‘ë©ë‹ˆë‹¤.
+Â  Â  public void ToggleZoom()
     {
         if (isGameOver) return;
         if (!isCameraOn)
         {
-            Debug.LogWarning("ÁÜ ±â´É ÁßÁöµÊ: Ä«¸Ş¶ó ²¨Áü »óÅÂ.");
+            Debug.LogWarning("ì¤Œ ê¸°ëŠ¥ ì¤‘ì§€ë¨: ì¹´ë©”ë¼ êº¼ì§ ìƒíƒœ.");
             return;
         }
 
-        // ÁÜ »óÅÂ¸¦ ¹İÀü½ÃÅ°°í (Åä±Û)
-        isZoomed = !isZoomed;
+Â  Â  Â  Â  // ì¤Œ ìƒíƒœë¥¼ ë°˜ì „ì‹œí‚¤ê³  (í† ê¸€)
+Â  Â  Â  Â  isZoomed = !isZoomed;
 
-        // ÀüÈ¯ ½Ã°£À» 0À¸·Î ¸®¼ÂÇÏ¿© Update()¿¡¼­ »õ·Î¿î Lerp ÀüÈ¯ ½ÃÀÛ
-        zoomTime = 0f;
+Â  Â  Â  Â  // ì „í™˜ ì‹œê°„ì„ 0ìœ¼ë¡œ ë¦¬ì…‹í•˜ì—¬ Update()ì—ì„œ ìƒˆë¡œìš´ Lerp ì „í™˜ ì‹œì‘
+Â  Â  Â  Â  zoomTime = 0f;
 
-        Debug.Log($"ToggleZoom È£Ãâ. »õ·Î¿î ÁÜ »óÅÂ: {(isZoomed ? "ÁÜ ÀÎ" : "ÁÜ ¾Æ¿ô")}");
+        Debug.Log($"ToggleZoom í˜¸ì¶œ. ìƒˆë¡œìš´ ì¤Œ ìƒíƒœ: {(isZoomed ? "ì¤Œ ì¸" : "ì¤Œ ì•„ì›ƒ")}");
     }
-
-
-    // --- »õ °ÔÀÓ ½ÃÀÛ ´ë±â ¹× ¹öÆ° ÀÌº¥Æ® ÇÔ¼ö ---
-
-    public void continueToNewGame()
+    // === ì‚¬ìš´ë“œ ì¬ìƒ í—¬í¼ í•¨ìˆ˜ ===
+    private void PlaySound(AudioClip clip)
     {
-        // ...
+        if (audioSource != null && clip != null)
+        {
+            audioSource.PlayOneShot(clip);
+        }
+    }
+    public void TakePicture()
+    {
+        if (isGameOver || !isCameraOn || isPhotoTaken) // ê²Œì„ ì˜¤ë²„, ì¹´ë©”ë¼ êº¼ì§, ë˜ëŠ” ì´ë¯¸ ì´¬ì˜ ì¤‘ì´ë©´ ì‹¤í–‰ ì•ˆ í•¨
+Â  Â  Â  Â  {
+            Debug.LogWarning("ì‚¬ì§„ ì´¬ì˜ ì¤‘ì§€ë¨: ê²Œì„ ì˜¤ë²„, ì¹´ë©”ë¼ êº¼ì§ ë˜ëŠ” ì´ë¯¸ ì´¬ì˜ ì¤‘.");
+            return;
+        }
+
+        isPhotoTaken = true; // ì‚¬ì§„ ì´¬ì˜ ì‹œì‘ í”Œë˜ê·¸ ì„¤ì •
+Â  Â  Â  Â  StartCoroutine(CaptureAndDisplayPhoto());
     }
 
-    // °ÔÀÓ ¿À¹ö ÆĞ³ÎÀÇ '´Ù½Ã ½ÃÀÛ' ¹öÆ°¿¡ ¿¬°áÇÒ ÇÔ¼ö
-    public void RestartLevel()
+    private IEnumerator CaptureAndDisplayPhoto()
+    {
+Â  Â  Â  Â  // 1. HUDë¥¼ ì ì‹œ ìˆ¨ê¸°ê³  ì´¬ì˜ì„ ì¤€ë¹„í•©ë‹ˆë‹¤.
+Â  Â  Â  Â  // HUDë¥¼ ì¦‰ì‹œ ìˆ¨ê¸°ê¸° ìœ„í•´ FadeDurationì„ 0ìœ¼ë¡œ ì„¤ì •í•˜ê±°ë‚˜, ì•„ì£¼ ì§§ì€ ì‹œê°„ìœ¼ë¡œ ì„¤ì •í•  ìˆ˜ ìˆìŠµë‹ˆë‹¤.
+Â  Â  Â  Â  // ì—¬ê¸°ì„œëŠ” ë¶€ë“œëŸ¬ìš´ ì „í™˜ì„ ìœ„í•´ fadeDurationì„ ì‚¬ìš©í•˜ê² ìŠµë‹ˆë‹¤.
+Â  Â  Â  Â  yield return StartCoroutine(FadeCanvasGroup(inGameHudCanvasGroup, 0f, fadeDuration * 0.5f));
+Â  Â  Â  Â  // HUDê°€ ì™„ì „íˆ ì‚¬ë¼ì§ˆ ë•Œê¹Œì§€ ê¸°ë‹¤ë¦¼
+
+Â  Â  Â  Â  // 2. í™”ë©´ ìº¡ì²˜ (í•œ í”„ë ˆì„ ëŒ€ê¸° í›„ ìº¡ì²˜í•´ì•¼ UIê°€ ì‚¬ë¼ì§„ í›„ì˜ í™”ë©´ì´ ìº¡ì²˜ë¨)
+Â  Â  Â  Â  yield return new WaitForEndOfFrame(); // ë Œë”ë§ì´ ì™„ë£Œëœ í›„ ë‹¤ìŒ í”„ë ˆì„ê¹Œì§€ ê¸°ë‹¤ë¦¼
+       // ì°°ì¹µ ì†Œë¦¬ ì¬ìƒ
+        PlaySound(photoCaptureSound);
+
+        Texture2D screenshotTexture = ScreenCapture.CaptureScreenshotAsTexture();
+
+        if (screenshotTexture != null)
+        {
+Â  Â  Â  Â  Â  Â  // 3. ìº¡ì²˜ëœ ì´ë¯¸ì§€ë¥¼ RawImageì— í• ë‹¹
+Â  Â  Â  Â  Â  Â  if (photoDisplayImage != null)
+            {
+                photoDisplayImage.texture = screenshotTexture;
+                photoDisplayImage.SetNativeSize(); // ì´ë¯¸ì§€ì˜ ì›ë˜ í¬ê¸°ë¡œ ì„¤ì • (ì„ íƒ ì‚¬í•­)
+Â  Â  Â  Â  Â  Â  }
+
+Â  Â  Â  Â  Â  Â  // 4. ìŠ¤í¬ë¦°ìƒ·ì„ íŒŒì¼ë¡œ ì €ì¥ (ì„ íƒ ì‚¬í•­)
+Â  Â  Â  Â  Â  Â  SaveScreenshot(screenshotTexture);
+
+Â  Â  Â  Â  Â  Â  // 5. HUDë¥¼ ë‹¤ì‹œ í˜ì´ë“œ ì¸ì‹œí‚¤ê³  ì‚¬ì§„ íŒ¨ë„ì„ í˜ì´ë“œ ì•„ì›ƒì‹œí‚´
+Â  Â  Â  Â  Â  Â  yield return StartCoroutine(FadeCanvasGroup(photoDisplayCanvasGroup, 1f, fadeDuration * 0.5f));
+Â  Â  Â  Â  Â  Â  // ì‚¬ì§„ íŒ¨ë„ì„ í˜ì´ë“œ ì¸ ì‹œí‚´
+
+Â  Â  Â  Â  Â  Â  yield return new WaitForSecondsRealtime(photoDisplayDuration); // ì‚¬ì§„ ë³´ì—¬ì¤„ ì‹œê°„ ë™ì•ˆ ëŒ€ê¸° (Time.timeScale ì˜í–¥ë°›ì§€ ì•ŠìŒ)
+
+Â  Â  Â  Â  Â  Â  // 6. ì‚¬ì§„ íŒ¨ë„ì„ í˜ì´ë“œ ì•„ì›ƒ ì‹œí‚´
+Â  Â  Â  Â  Â  Â  yield return StartCoroutine(FadeCanvasGroup(photoDisplayCanvasGroup, 0f, fadeDuration * 0.5f));
+
+Â  Â  Â  Â  Â  Â  // 7. HUDë¥¼ ë‹¤ì‹œ í˜ì´ë“œ ì¸ ì‹œí‚´
+Â  Â  Â  Â  Â  Â  yield return StartCoroutine(FadeCanvasGroup(inGameHudCanvasGroup, 1f, fadeDuration * 0.5f));
+
+Â  Â  Â  Â  Â  Â  // ì‚¬ìš©í–ˆë˜ Texture2D ë©”ëª¨ë¦¬ í•´ì œ
+Â  Â  Â  Â  Â  Â  Destroy(screenshotTexture);
+        }
+        else
+        {
+            Debug.LogError("ìŠ¤í¬ë¦°ìƒ· ìº¡ì²˜ ì‹¤íŒ¨!");
+Â  Â  Â  Â  Â  Â  // ì‹¤íŒ¨ ì‹œì—ë„ HUDëŠ” ë‹¤ì‹œ ë³´ì—¬ì¤˜ì•¼ í•¨
+Â  Â  Â  Â  Â  Â  StartCoroutine(FadeCanvasGroup(inGameHudCanvasGroup, 1f, fadeDuration * 0.5f));
+        }
+
+        isPhotoTaken = false; // ì‚¬ì§„ ì´¬ì˜ ì™„ë£Œ í”Œë˜ê·¸ í•´ì œ
+Â  Â  }
+
+Â  Â  // ìŠ¤í¬ë¦°ìƒ·ì„ íŒŒì¼ë¡œ ì €ì¥í•˜ëŠ” í•¨ìˆ˜
+Â  Â  private void SaveScreenshot(Texture2D screenshotTexture)
+    {
+        if (screenshotTexture == null) return;
+
+        byte[] bytes = screenshotTexture.EncodeToPNG(); // PNG í˜•ì‹ìœ¼ë¡œ ì¸ì½”ë”©
+
+Â  Â  Â  Â  // ìŠ¤í¬ë¦°ìƒ· ì €ì¥ ê²½ë¡œ ì„¤ì •
+Â  Â  Â  Â  string folderPath = Path.Combine(Application.persistentDataPath, screenshotFolderName);
+        if (!Directory.Exists(folderPath))
+        {
+            Directory.CreateDirectory(folderPath);
+        }
+
+        string fileName = $"Screenshot_{System.DateTime.Now:yyyyMMdd_HHmmss}.png";
+        string filePath = Path.Combine(folderPath, fileName);
+
+        try
+        {
+            File.WriteAllBytes(filePath, bytes);
+            Debug.Log($"ìŠ¤í¬ë¦°ìƒ· ì €ì¥ ì™„ë£Œ: {filePath}");
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"ìŠ¤í¬ë¦°ìƒ· ì €ì¥ ì‹¤íŒ¨: {e.Message}");
+        }
+    }
+
+
+Â  Â  // --- ìƒˆ ê²Œì„ ì‹œì‘ ëŒ€ê¸° ë° ë²„íŠ¼ ì´ë²¤íŠ¸ í•¨ìˆ˜ ---
+
+Â  Â  public void continueToNewGame()
+    {
+Â  Â  Â  Â  // ...
+Â  Â  }
+
+Â  Â  // ê²Œì„ ì˜¤ë²„ íŒ¨ë„ì˜ 'ë‹¤ì‹œ ì‹œì‘' ë²„íŠ¼ì— ì—°ê²°í•  í•¨ìˆ˜
+Â  Â  public void RestartLevel()
     {
         Time.timeScale = 1;
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
