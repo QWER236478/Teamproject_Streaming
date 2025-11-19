@@ -101,7 +101,7 @@
                 {
                     "name": "",
                     "id": "d8ab715d-d6ee-4082-b85f-4fc6461d975b",
-                    "path": "<XRController>{RightHand}/{SecondaryTrigger}",
+                    "path": "<XRController>{RightHand}/{TriggerButton}",
                     "interactions": "",
                     "processors": "",
                     "groups": "",

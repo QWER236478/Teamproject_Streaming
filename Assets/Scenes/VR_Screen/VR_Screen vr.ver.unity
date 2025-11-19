@@ -1335,6 +1335,7 @@ MonoBehaviour:
   photoDisplayImage: {fileID: 0}
   photoDisplayDuration: 3
   screenshotFolderName: Screenshots
+  cameraStatus: {fileID: 1085049307}
   timerText: {fileID: 91488935}
   recIndicator: {fileID: 442203101}
   blinkInterval: 1
@@ -1387,7 +1388,7 @@ MonoBehaviour:
     m_PostInfinity: 2
     m_RotationOrder: 4
   audioSource: {fileID: 623371648}
-  photoCaptureSound: {fileID: 8300000, guid: 4bfb2512934b9a240af2729892b3b0eb, type: 3}
+  photoCaptureSound: {fileID: 8300000, guid: 094860e3b7b37844db7d038ff0302b31, type: 3}
   shutterFlashCanvasGroup: {fileID: 0}
   visualFlashDuration: 0.1
 --- !u!4 &623371646
@@ -1427,8 +1428,8 @@ AudioSource:
   m_Enabled: 1
   serializedVersion: 4
   OutputAudioMixerGroup: {fileID: 0}
-  m_audioClip: {fileID: 8300000, guid: 4bfb2512934b9a240af2729892b3b0eb, type: 3}
-  m_Resource: {fileID: 8300000, guid: 4bfb2512934b9a240af2729892b3b0eb, type: 3}
+  m_audioClip: {fileID: 8300000, guid: 094860e3b7b37844db7d038ff0302b31, type: 3}
+  m_Resource: {fileID: 8300000, guid: 094860e3b7b37844db7d038ff0302b31, type: 3}
   m_PlayOnAwake: 0
   m_Volume: 1
   m_Pitch: 1
@@ -1986,6 +1987,18 @@ MonoBehaviour:
     m_ActionName: Player/ToggleCamera
   - m_PersistentCalls:
       m_Calls:
+      - m_Target: {fileID: 1060642466}
+        m_TargetAssemblyTypeName: SpotlightController, Assembly-CSharp
+        m_MethodName: ToggleSpotlight
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
       - m_Target: {fileID: 623371645}
         m_TargetAssemblyTypeName: UIManager, Assembly-CSharp
         m_MethodName: ToggleFlash
@@ -2450,6 +2463,7 @@ GameObject:
   - component: {fileID: 1085049304}
   - component: {fileID: 1085049306}
   - component: {fileID: 1085049305}
+  - component: {fileID: 1085049307}
   m_Layer: 5
   m_Name: Image (1)
   m_TagString: Untagged
@@ -2514,6 +2528,28 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1085049303}
   m_CullTransparentMesh: 1
+--- !u!95 &1085049307
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1085049303}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 3be53d58152b2124eb220304ed53c521, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &1170453916
 GameObject:
   m_ObjectHideFlags: 0
@@ -8172,8 +8208,8 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 9184842255010272617}
   - {fileID: 1060642464}
+  - {fileID: 9184842255010272617}
   m_Father: {fileID: 7522991541643691604}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &7772571674373280270

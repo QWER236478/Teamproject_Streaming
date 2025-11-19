@@ -14,6 +14,7 @@ public class UIManager : MonoBehaviour
     public RawImage photoDisplayImage;          // 촬영된 사진을 표시할 RawImage
     public float photoDisplayDuration = 3f;     // 촬영된 사진을 보여줄 시간 (초)
     public string screenshotFolderName = "Screenshots"; // 스크린샷 저장 폴더 이름
+    public Animator cameraStatus;
 
     // === UI 요소 연결 변수 ===
     // 타이머
@@ -83,9 +84,9 @@ public class UIManager : MonoBehaviour
     // === 줌 상태 변수 추가 ===
     private bool isZoomed = false; // 현재 줌 인 상태인지
     private float zoomTime = 0f;    // 줌 전환 경과 시간
+    private float zoomStartFov;
 
-
-    void Start()
+    void Start()
     {
         currentBatteryLevel = initialBatteryLevel;
         Time.timeScale = 1;
@@ -119,7 +120,9 @@ public class UIManager : MonoBehaviour
         {
             // 시작 시 최대 줌 아웃(기본) 상태로 설정
             mainCamera.fieldOfView = camMaxFov;
+            zoomStartFov = camMaxFov;
         }
+        zoomTime = zoomDuration;
 
 
         // 배터리 UI 초기 업데이트 (색상 및 Fill)
@@ -168,6 +171,7 @@ public class UIManager : MonoBehaviour
     private void HandleZoomTransition()
     {
         if (mainCamera == null) return;
+        cameraStatus.SetBool("IsZoom", isZoomed);
 
         // 줌 전환 경과 시간이 설정된 지속 시간보다 작을 때만 Lerp 진행
         if (zoomTime < zoomDuration)
@@ -178,23 +182,21 @@ public class UIManager : MonoBehaviour
             // AnimationCurve를 적용한 시간 값
             float curveValue = zoomCurve.Evaluate(normalizedTime);
 
-            float startFOV, endFOV;
+            float endFOV;
 
             if (isZoomed)
             {
                 // 줌 인 전환 중: Max -> Min
-                startFOV = camMaxFov;
                 endFOV = camMinFov;
             }
             else
             {
                 // 줌 아웃 전환 중: Min -> Max
-                startFOV = camMinFov;
                 endFOV = camMaxFov;
             }
 
             // Lerp를 사용하여 FOV를 부드럽게 전환
-            mainCamera.fieldOfView = Mathf.Lerp(startFOV, endFOV, curveValue);
+            mainCamera.fieldOfView = Mathf.Lerp(zoomStartFov, endFOV, curveValue);
         }
     }
 
@@ -392,7 +394,8 @@ public class UIManager : MonoBehaviour
             // 카메라가 꺼지면 줌 상태도 리셋 (Max FOV로 즉시 돌아감)
             if (mainCamera != null) mainCamera.fieldOfView = camMaxFov;
             isZoomed = false;
-            zoomTime = 0f;
+            zoomTime = zoomDuration; 
+            zoomStartFov = camMaxFov;
         }
     }
 
@@ -422,7 +425,7 @@ public class UIManager : MonoBehaviour
         }
         else
         {
-            flashLight.enabled = false;
+            flashLight.enabled = true;
             Debug.Log("플래시 꺼짐 최종 확인: Light.enabled = FALSE 설정됨.");
         }
     }
@@ -446,6 +449,7 @@ public class UIManager : MonoBehaviour
 
         // 줌 상태를 반전시키고 (토글)
         isZoomed = !isZoomed;
+        zoomStartFov = mainCamera.fieldOfView;
 
         // 전환 시간을 0으로 리셋하여 Update()에서 새로운 Lerp 전환 시작
         zoomTime = 0f;
