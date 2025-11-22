@@ -6,7 +6,7 @@ using UnityEngine.UI;
 public class LoopManager : MonoBehaviour
 {
     [Header("루프 진행")]
-    public string[] corridorOrder = { "A", "B", "C", "D" };  // 진행 순서
+    public string[] corridorOrder = { "C", "D", "A", "B" };  // 진행 순서
     private int currentIndex = 0;                            // 현재 기대하는 복도 인덱스
     public int loopCount = 0;                                // 완성된 루프 수
 

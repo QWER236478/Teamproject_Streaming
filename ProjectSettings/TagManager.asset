@@ -6,6 +6,8 @@ TagManager:
   tags:
   - Exit
   - BossStage
+  - GlitchZone
+  - MapZone
   layers:
   - Default
   - TransparentFX
