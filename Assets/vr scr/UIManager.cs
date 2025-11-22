@@ -570,4 +570,24 @@ public class UIManager : MonoBehaviour
         Time.timeScale = 1;
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
+    public void DrainBatteryImmediate(float amount)
+    {
+        if (isGameOver) return; // 게임 오버면 무시
+
+        // 전달받은 양만큼 배터리 즉시 감소
+        currentBatteryLevel -= amount;
+
+        // 0 밑으로 내려가지 않게 막음
+        currentBatteryLevel = Mathf.Max(0f, currentBatteryLevel);
+
+        // UI 즉시 갱신 (이게 있어야 깎이자마자 눈에 보임)
+        UpdateBatteryUI();
+
+        // 0 되면 게임 오버 처리 (기존 로직 재사용)
+        if (currentBatteryLevel <= 0 && !isGameOver)
+        {
+            isGameOver = true;
+            ShowGameOver();
+        }
+    }
 }

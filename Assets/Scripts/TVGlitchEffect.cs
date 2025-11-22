@@ -3,6 +3,8 @@ using UnityEngine.UI;
 
 public class TVGlitchEffect : MonoBehaviour
 {
+    [Header("시스템 연결")]
+    public UIManager uiManager;
     [Header("연결")]
     public RawImage noiseImage;
     public CanvasGroup noiseCanvas;
@@ -12,7 +14,8 @@ public class TVGlitchEffect : MonoBehaviour
     [Header("감지 설정")]
     public float maxDistance = 15.0f; // 거리
     [Range(0f, 1f)] public float monsterViewAngle = 0.8f; // 몬스터 시야각 (0.8 = 앞만 봄, 0.5 = 넓게 봄)
-
+    [Header("배터리 설정")]
+    public float extraDrainRate = 15.0f;
     [Header("멀미 방지 설정 (중요!)")]
     [Range(0f, 1f)] public float maxIntensity = 0.2f; // ★최대 투명도 (0.2 추천: 아주 흐릿하게)
     public float fadeSpeed = 2.0f; // 서서히 켜지는 속도 (낮을수록 부드러움)
@@ -48,6 +51,11 @@ public class TVGlitchEffect : MonoBehaviour
                 if (dot >= monsterViewAngle)
                 {
                     targetAlpha = 1f;
+                    if (uiManager != null)
+                    {
+                        // Time.deltaTime을 곱해야 프레임 상관없이 초당 15만큼 깎입니다.
+                        uiManager.DrainBatteryImmediate(extraDrainRate * Time.deltaTime);
+                    }
                 }
             }
         }
@@ -84,4 +92,5 @@ public class TVGlitchEffect : MonoBehaviour
     {
         if (other.CompareTag("MapZone")) isInMap = false;
     }
+
 }

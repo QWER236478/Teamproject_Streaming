@@ -6460,14 +6460,14 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 462828733}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: 0.7071068, z: -0, w: 0.7071068}
-  m_LocalPosition: {x: 75.31, y: -0.99, z: -5.749999}
-  m_LocalScale: {x: 3.377201, y: 1.4266, z: 23.075705}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.01080748, y: 0, z: 0.4064884}
+  m_LocalScale: {x: 2.679668, y: 1, z: 0.1459919}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1481704942}
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &463068596
 GameObject:
   m_ObjectHideFlags: 0
@@ -20731,12 +20731,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d8184f8e671267c4d805666bcec17165, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  uiManager: {fileID: 1622074806}
   noiseImage: {fileID: 384447358}
   noiseCanvas: {fileID: 384447357}
   targetLight: {fileID: 374538135}
   playerCamera: {fileID: 1365877590}
   maxDistance: 20
   monsterViewAngle: 0.8
+  extraDrainRate: 5
   maxIntensity: 0.9
   fadeSpeed: 5
   shakeAmount: 0.05
@@ -24425,13 +24427,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1481704941}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.010807478, y: 0, z: 0.40648836}
-  m_LocalScale: {x: 2.6796677, y: 1, z: 0.14599189}
+  m_LocalRotation: {x: -0, y: 0.7071068, z: -0, w: 0.7071068}
+  m_LocalPosition: {x: 75.31, y: -0.99, z: -5.749999}
+  m_LocalScale: {x: 3.377201, y: 1.4266, z: 23.075705}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 462828738}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
 --- !u!65 &1481704943
 BoxCollider:
   m_ObjectHideFlags: 0
