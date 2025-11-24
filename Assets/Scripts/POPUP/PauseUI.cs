@@ -2,7 +2,6 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.XR;
 
 public class PauseUI : MonoBehaviour
 {
@@ -10,12 +9,25 @@ public class PauseUI : MonoBehaviour
     public GameObject pauseMenuPanel;
 
     [Header("입력 액션(왼손 메뉴 버튼)")]
-    public InputAction pauseAction; 
+    public InputActionReference pauseActionRef;   // ← 액션 레퍼런스로 변경
 
+    private InputAction pauseAction;
     private bool isPaused = false;
 
-    void OnEnable() { pauseAction.Enable(); }
-    void OnDisable() { pauseAction.Disable(); }
+    void OnEnable()
+    {
+        if (pauseActionRef != null)
+        {
+            pauseAction = pauseActionRef.action;
+            pauseAction.Enable();
+        }
+    }
+
+    void OnDisable()
+    {
+        if (pauseAction != null)
+            pauseAction.Disable();
+    }
 
     void Start()
     {
@@ -25,12 +37,13 @@ public class PauseUI : MonoBehaviour
 
     void Update()
     {
-        // ▶ 왼손 메뉴 버튼(≡) OR 키보드 Z 로 토글
-        if (pauseAction.triggered)
+        // 왼손 메뉴 버튼 (Input System 액션)
+        if (pauseAction != null && pauseAction.triggered)
         {
             TogglePause();
         }
 
+        // 키보드 Q도 테스트용으로 남겨둠
         if (Input.GetKeyDown(KeyCode.Q))
         {
             TogglePause();
@@ -55,7 +68,7 @@ public class PauseUI : MonoBehaviour
         }
     }
 
-    // UI 버튼
+    // UI 버튼용
     public void OnResume()
     {
         isPaused = false;
